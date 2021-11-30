@@ -20,6 +20,22 @@ int UnpackedItem::UpdateItem(std::pair<uint16_t, uint16_t> itemIn, unsigned long
     return 0;
 }
 
+int UnpackedItem::GetGroup() {
+    return group;
+}
+
+int UnpackedItem::GetItem() {
+    return item;
+}
+
+unsigned long UnpackedItem::GetEventNumber() {
+    return eventNumber;
+}
+
+uint16_t UnpackedItem::GetDataWord() {
+    return dataWord;
+}
+
 OutputEvent::OutputEvent() {
     eventNumber = 0;
     for(double & adcChannel : adcChannels){

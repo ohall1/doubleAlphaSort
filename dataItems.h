@@ -19,6 +19,10 @@ public:
     UnpackedItem();
     ~UnpackedItem(){};
     int UpdateItem(std::pair< uint16_t, uint16_t> itemIn, unsigned long eventNumberIn);
+    int GetGroup();
+    int GetItem();
+    unsigned long GetEventNumber();
+    uint16_t GetDataWord();
 
 };
 

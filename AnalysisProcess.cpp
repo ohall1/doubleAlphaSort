@@ -131,6 +131,18 @@ int AnalysisProcess::ProcessEvent() {
     outputEvent.ClearEvent();
     for(dataWordsListIt = dataWordsList.begin(); dataWordsListIt != dataWordsList.end(); dataWordsListIt++){
         unpackedItem.UpdateItem(*dataWordsListIt, eventNumber);
+        if(unpackedItem.GetGroup() < 20){
+            //Is adc event
+            itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 1) * 64;
+            itemValue = (double)unpackedItem.GetDataWord() * adcChannelGains[itemChannel] - adcChannelOffset[itemChannel];
+            outputEvent.AddToEvent(true, itemChannel, itemValue);
+        }
+        else {
+            //Is TDC event
+            itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 1) * 64;
+            itemValue = (double)unpackedItem.GetDataWord();
+            outputEvent.AddToEvent(false, itemChannel, itemValue);
+        }
 
 
     }

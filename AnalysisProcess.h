@@ -35,6 +35,8 @@ private:
     // variables for unpacking and calibrating data
     UnpackedItem unpackedItem;
     OutputEvent outputEvent;
+    int itemChannel;
+    double itemValue;
     static const int NUMBER_ADC_CHANNELS = 96;
     double adcChannelGains[NUMBER_ADC_CHANNELS];
     double adcChannelOffset[NUMBER_ADC_CHANNELS];
