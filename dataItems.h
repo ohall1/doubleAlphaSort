@@ -34,5 +34,6 @@ public:
     OutputEvent();
     int ClearEvent();
     int AddToEvent(bool adcEvent, int channel, double value);
+    int SetEventNumber(unsigned long eventNumberIn);
 
 };

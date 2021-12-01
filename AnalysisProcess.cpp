@@ -127,6 +127,8 @@ int AnalysisProcess::ReadBlockHeader() {
                  (blockHeader[22] * 0xFF) << 16 | (blockHeader[23] << 24);
 
     inputFile.read((char*)&blockData, dataLength);
+
+    return 0;
 }
 
 int AnalysisProcess::ProcessEvent() {
@@ -161,6 +163,7 @@ int AnalysisProcess::ProcessEvent() {
 
 
     }
+    outputEvent.SetEventNumber(unpackedItem.GetEventNumber());
     outputTree->Fill();
     return 0;
 }

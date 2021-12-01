@@ -23,5 +23,5 @@ add_definitions(${ROOT_CXX_FLAGS} -lTreePlayer )
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(doubleAlpha main.cpp AnalysisProcess.cpp AnalysisProcess.h dataItems.cpp dataItems.h)
+add_executable(doubleAlpha main.cpp)
 target_link_libraries(doubleAlpha ${ROOT_LIBRARIES})
