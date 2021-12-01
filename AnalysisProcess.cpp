@@ -9,6 +9,7 @@
 #include <utility>
 #include <iostream>
 #include <cstring>
+#include <TH2D.h>
 #include "AnalysisProcess.h"
 
 AnalysisProcess::AnalysisProcess(){
@@ -22,6 +23,7 @@ AnalysisProcess::AnalysisProcess(){
     dataLength = 0;
     positionInBlock = 0;
     eventNumber = 0;
+    isPulserEvent = false;
 }
 
 int AnalysisProcess::ReadParameters(std::string &parameterFile) {
@@ -129,6 +131,11 @@ int AnalysisProcess::ReadBlockHeader() {
 
 int AnalysisProcess::ProcessEvent() {
     outputEvent.ClearEvent();
+    isPulserEvent = false;
+    if (dataWordsList.size()>64){
+        //Over half the channels fire is a pulser event
+        isPulserEvent = true;
+    }
     for(dataWordsListIt = dataWordsList.begin(); dataWordsListIt != dataWordsList.end(); dataWordsListIt++){
         unpackedItem.UpdateItem(*dataWordsListIt, eventNumber);
         if(unpackedItem.GetGroup() < 20){
@@ -136,15 +143,62 @@ int AnalysisProcess::ProcessEvent() {
             itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 1) * 64;
             itemValue = (double)unpackedItem.GetDataWord() * adcChannelGains[itemChannel] - adcChannelOffset[itemChannel];
             outputEvent.AddToEvent(true, itemChannel, itemValue);
+
+            rawADCEnergyVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
+            calibratedADCEnergyVsChannel->Fill(itemChannel, itemValue);
+            if(isPulserEvent){
+                pulserVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
+            }
         }
         else {
             //Is TDC event
             itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 1) * 64;
             itemValue = (double)unpackedItem.GetDataWord();
             outputEvent.AddToEvent(false, itemChannel, itemValue);
+            rawTDCVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
+            calibratedTDCVsChannel->Fill(itemChannel, itemValue);
         }
 
 
     }
+    outputTree->Fill();
+    return 0;
+}
+
+int AnalysisProcess::OpenOutputFile(std::string outputFile) {
+
+    outF = TFile::Open(outputFile.c_str(), "RECREATE");
+    if(!outF){
+        std::cout << "Problem opening output file. Check input." << std::endl;
+        return -1;
+    }
+    outputTree = new TTree("doubleAlpha","doubleAlpha");
+    outputTree->Branch("double_alpha", &outputEvent, "eventNumber/l:adcChannels[96]/D:tdcChannels/D");
+    return 0;
+}
+
+int AnalysisProcess::DefineHistograms() {
+
+    rawADCEnergyVsChannel = new TH2D("Raw_ADC_Energy_Vs_Channel","",96,0,96,4096,0,4096);
+    calibratedADCEnergyVsChannel = new TH2D("Calibrated_ADC_Energy_Vs_Channel","",96,0,96,4096,0,4096);
+
+    rawTDCVsChannel = new TH2D("Raw_TDC_Vs_Channel","",128,0,128,4096,0,4096);
+    calibratedTDCVsChannel = new TH2D("Calibrated_TDC_Vs_Channel","",128,0,128,4096,0,4096);
+    pulserVsChannel = new TH2D("Pulser_Vs_Channel","",96,0,96,4096,0,4096);
+
+    return 0;
+}
+
+int AnalysisProcess::CloseAnalysisProcess() {
+
+    rawADCEnergyVsChannel->Write();
+    calibratedADCEnergyVsChannel->Write();
+    rawTDCVsChannel->Write();
+    calibratedTDCVsChannel->Write();
+    pulserVsChannel->Write();
+    outF->Write();
+
+    outF->Close();
+
     return 0;
 }

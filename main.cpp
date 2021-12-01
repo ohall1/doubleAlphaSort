@@ -116,6 +116,16 @@ int main(int argc, char **argv) {
         std::cout << "Problem reading parameters file" << std::endl;
         return -1;
     }
+    if(!analysisProcess.OpenOutputFile(userOutFile)){
+        return -1;
+    }
+    if(!analysisProcess.DefineHistograms()){
+        return -1;
+    }
+    if(!analysisProcess.BeginAnalysis(alphaFileList)){
+        return -1;
+    }
+
 
 
 
