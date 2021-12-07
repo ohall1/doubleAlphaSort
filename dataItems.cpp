@@ -55,12 +55,15 @@ int OutputEvent::ClearEvent() {
     for(double & tdcChannel : tdcChannels){
         tdcChannel = 0.0;
     }
+    adcMultiplicity = 0;
+    tdcMultiplicity = 0;
+    pulserNumber = 0;
     return 0;
 }
 
 int OutputEvent::AddToEvent(bool adcEvent, int channel, double value) {
     if(adcEvent){
-        if(channel < 96) {
+        if(channel < 128) {
             adcChannels[channel] = value;
             return 0;
         }
@@ -85,5 +88,35 @@ int OutputEvent::AddToEvent(bool adcEvent, int channel, double value) {
 
 int OutputEvent::SetEventNumber(unsigned long eventNumberIn) {
     eventNumber = eventNumberIn;
+    return 0;
+}
+
+int OutputEvent::SetADCMultiplicity() {
+    adcMultiplicity = 0;
+    for(double adcChannel : adcChannels){
+        if( adcChannel > 0){
+            adcMultiplicity++;
+        }
+    }
+    return adcMultiplicity;
+}
+
+int OutputEvent::SetTDCMultiplicity() {
+    tdcMultiplicity = 0;
+    for(double tdcChannel : tdcChannels){
+        if( tdcChannel > 0){
+            tdcMultiplicity++;
+        }
+    }
+    return tdcMultiplicity;
+}
+
+int OutputEvent::SetPulserNumber(int pulserNumberIn) {
+    pulserNumber = pulserNumberIn;
+    return pulserNumber;
+}
+
+int OutputEvent::AddScalerEvent(int channel, uint16_t value) {
+    scalerChannels[channel] = value;
     return 0;
 }

@@ -29,11 +29,19 @@ public:
 class OutputEvent{
 public:
     unsigned long eventNumber;
-    double adcChannels[96];
+    double adcChannels[128];
     double tdcChannels[128];
+    uint16_t scalerChannels[16];
+    int adcMultiplicity;
+    int tdcMultiplicity;
+    unsigned long pulserNumber;
     OutputEvent();
     int ClearEvent();
     int AddToEvent(bool adcEvent, int channel, double value);
     int SetEventNumber(unsigned long eventNumberIn);
+    int SetADCMultiplicity();
+    int SetTDCMultiplicity();
+    int SetPulserNumber(int pulserNumberIn);
+    int AddScalerEvent(int channel, uint16_t value);
 
 };

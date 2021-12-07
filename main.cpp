@@ -6,6 +6,9 @@
 
 //ROOT Libraries
 #include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TH2D.h"
 
 #include "AnalysisProcess.cpp"
 
@@ -64,16 +67,17 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    std::ifstream confFile(configFile.data());
+    std::ifstream confFile(configFile.c_str());
     while ( confFile.good() ){
         getline(confFile,line);
         auto commentLine=line.find("#");
         std::string dummyVar;
         auto newLine=line.substr(0,commentLine);
-        if(newLine.empty()){std::istringstream iss(line,std::istringstream::in);
+        std::cout << newLine.size() << std::endl;
+        if(newLine.size() > 0){std::istringstream iss(line,std::istringstream::in);
 
             iss >> dummyVar;
-
+            std::cout << dummyVar << std::endl;
             if (dummyVar == "alphaFile"){
                 iss>>dummyVar;
                 if ( alphaFileList.empty()){
@@ -106,6 +110,7 @@ int main(int argc, char **argv) {
             }//End of AIDAList
             else if (dummyVar == "alphaConfig"){
                 iss >> alphaParameters;
+                std::cout << "Parameters file: " << alphaParameters << std::endl;
             }//End of AIDAConfig
         }//End of if (newLine)
     }// End of reading in configuration file
@@ -117,14 +122,17 @@ int main(int argc, char **argv) {
         return -1;
     }
     if(!analysisProcess.OpenOutputFile(userOutFile)){
+        std::cout << "Issue with output file " <<std::endl;
         return -1;
     }
     if(!analysisProcess.DefineHistograms()){
         return -1;
     }
+    std::cout << "Beginning analysis" << std::endl;
     if(!analysisProcess.BeginAnalysis(alphaFileList)){
         return -1;
     }
+    analysisProcess.CloseAnalysisProcess();
 
 
 

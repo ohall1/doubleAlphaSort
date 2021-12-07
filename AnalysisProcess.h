@@ -10,6 +10,7 @@
 #include <deque>
 #include <TFile.h>
 #include <TTree.h>
+#include "TH2D.h"
 #include "dataItems.cpp"
 
 class AnalysisProcess {
@@ -21,8 +22,10 @@ private:
     // variables for reading in data
     static const int HEADER_SIZE = 24; // Number of bytes in the header block
     char blockHeader[HEADER_SIZE]{};
-    char blockData[0x10000]{}; //max size of block is 64kB
+    char blockData[0x10000-24]{}; //max size of block is 64kB
     int dataLength;
+    unsigned long fileSize;
+    unsigned long positionInFile;
     std::pair<uint16_t , uint16_t> dataWords;
     int positionInBlock;
     std::deque<std::pair<int16_t, int16_t>> dataWordsList;
@@ -39,7 +42,7 @@ private:
     OutputEvent outputEvent;
     int itemChannel{};
     double itemValue{};
-    static const int NUMBER_ADC_CHANNELS = 96;
+    static const int NUMBER_ADC_CHANNELS = 200;
     double adcChannelGains[NUMBER_ADC_CHANNELS]{};
     double adcChannelOffset[NUMBER_ADC_CHANNELS]{};
 
@@ -47,6 +50,7 @@ private:
     TFile * outF{};
     bool isPulserEvent;
     TTree * outputTree;
+    unsigned long pulserNumber; //Tracks number of pulsers seen in the analysis
 
 
     // Variables for histograms
@@ -60,7 +64,7 @@ private:
 public:
     AnalysisProcess();
     ~AnalysisProcess()= default;
-    int ReadParameters(std::string &parameterFile);
+    int ReadParameters(std::string parameterFile);
     int BeginAnalysis(std::list<std::string> alphaFiles);
     int OpenOutputFile(std::string outputFile);
     int DefineHistograms();
