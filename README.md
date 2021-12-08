@@ -3,7 +3,8 @@
 ## Program aims
 - Take the MIDAS data files produced by the DSSSD DAQ and convert them into ROOT events.
 - ADC channels start from 0 with the first 64 belonging to the DSSD. Then there will be one channel for the photodiode.
-- TDC channels start from 16 with the same ordering.
+- TDC channels start from 0 with the same ordering.
+  - The TDC channel mapping assumes the DAQ is running in Common stop mode and that the first 16 channels of each v767 are not being used as such. 
   - There is no TDC channel for the photodiode
 ## Program usage
 - Once the program has been built it can be run with ./doubleAlpha -c ExampleConfig.csv -o outputFile.root

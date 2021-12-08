@@ -187,7 +187,7 @@ int AnalysisProcess::ProcessEvent() {
             //Is TDC event
             itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 20) * 64;
             //Common stop mode means first 16 channels of V767 module are not used
-            itemChannel = itemChannel - 16 *((unpackedItem.GetGroup()-20)/2);
+            itemChannel = itemChannel - 16 *(1+((unpackedItem.GetGroup()-20)/2));
             itemValue = (double)unpackedItem.GetDataWord();
             outputEvent.AddToEvent(false, itemChannel, itemValue);
             rawTDCVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
