@@ -19,6 +19,10 @@ AnalysisProcess::AnalysisProcess(){
         adcChannelOffset[i] = 0.;
         adcChannelGains[i] = 1.0;
     }
+    for (auto i = 0; i < 16; i++){
+        scalerBase[i] = 0;
+        previousScaler[i] = 0;
+    }
     dataLength = 0;
     positionInBlock = 0;
     eventNumber = 0;
@@ -192,7 +196,13 @@ int AnalysisProcess::ProcessEvent() {
         else if(unpackedItem.GetGroup() == 30){
             //Is scaler event
             itemChannel = unpackedItem.GetItem();
-            outputEvent.AddScalerEvent(itemChannel, unpackedItem.GetDataWord());
+            if( itemChannel < 16 ) {
+                if (unpackedItem.GetDataWord() < previousScaler[itemChannel]) {
+                    scalerBase[itemChannel] += 65536;
+                }
+                previousScaler[itemChannel] = unpackedItem.GetDataWord();
+                outputEvent.AddScalerEvent(itemChannel, unpackedItem.GetDataWord()+scalerBase[itemChannel]);
+            }
         }
         else continue;
 
@@ -218,7 +228,7 @@ int AnalysisProcess::OpenOutputFile(std::string outputFile) {
         return -1;
     }
     outputTree = new TTree("doubleAlpha","doubleAlpha");
-    outputTree->Branch("double_alpha", &outputEvent, "eventNumber/l:adcChannels[128]/D:tdcChannels[128]/D:scalerChannels[16]/s:adcMultiplicity/I:tdcMultiplicity/I:pulserNumber/l");
+    outputTree->Branch("double_alpha", &outputEvent, "eventNumber/l:adcChannels[128]/D:tdcChannels[128]/D:scalerChannels[16]/l:adcMultiplicity/I:tdcMultiplicity/I:pulserNumber/l");
     return 1;
 }
 

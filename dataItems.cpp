@@ -116,7 +116,7 @@ int OutputEvent::SetPulserNumber(int pulserNumberIn) {
     return pulserNumber;
 }
 
-int OutputEvent::AddScalerEvent(int channel, uint16_t value) {
+int OutputEvent::AddScalerEvent(int channel, unsigned long value) {
     scalerChannels[channel] = value;
     return 0;
 }

@@ -46,6 +46,9 @@ private:
     double adcChannelGains[NUMBER_ADC_CHANNELS]{};
     double adcChannelOffset[NUMBER_ADC_CHANNELS]{};
 
+    unsigned long scalerBase[16];
+    int previousScaler[16];
+
     // Variables for outputting data
     TFile * outF{};
     bool isPulserEvent;

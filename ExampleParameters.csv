@@ -1,2 +1,3 @@
-#mapfee64 -> DSSD: map_dssd <FEE> <DSSD no.>
-adcOffset 0 0.0
+#parameter  channel value
+adcOffset   0       0.0
+adcGain     0       0.0
