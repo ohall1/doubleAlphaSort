@@ -3,6 +3,8 @@
 //
 
 #include <cstdint>
+#include "TObject.h"
+#include "TCollection.h"
 
 #ifndef DOUBLEALPHA_DATAITEMS_H
 #define DOUBLEALPHA_DATAITEMS_H
@@ -26,7 +28,7 @@ public:
 
 };
 
-class OutputEvent{
+class OutputEvent: public TObject{
 public:
     unsigned long eventNumber;
     double adcChannels[128];
@@ -43,5 +45,7 @@ public:
     int SetTDCMultiplicity();
     int SetPulserNumber(int pulserNumberIn);
     int AddScalerEvent(int channel, unsigned long value);
+
+ClassDef(OutputEvent,1);  //Simple event class
 
 };

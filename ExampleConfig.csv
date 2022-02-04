@@ -1,8 +1,8 @@
 #Include Single alpha File
-alphaFile	/home/oscar/data/double_alpha/test/run70_10
+#alphaFile	/home/oscar/data/double_alpha/pulser_walkthrough/run117_0
 
 #Include multiple alpha files format "String before run number" <run number> <sub-run start> <sub-run end>
-#alphaList R 6 17 20
+alphaList /home/oscar/data/double_alpha/experiment_data/run 118 0 2
 
 #alpha Parameters file
-alphaConfig /home/oscar/code/doubleAlpha/ExampleParameters.csv
+alphaConfig /home/oscar/code/doubleAlpha/Parameters_Run117.csv

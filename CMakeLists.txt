@@ -20,9 +20,12 @@ include(${ROOT_USE_FILE})
 include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS} -lTreePlayer )
 #ROOT_GENERATE_DICTIONARY(G__data2Tree data2Tree.hpp BRIKENTreeData.h LINKDEF data2TreeLinkDef.hpp)
+ROOT_GENERATE_DICTIONARY(G__eventDict dataItems.h LINKDEF LinkDef.h)
+add_library(eventDict SHARED dataItems.cpp G__eventDict.cxx)
+target_link_libraries(eventDict ${ROOT_LIBRARIES} -lTreePlayer)
 
 add_executable(doubleAlpha main.cpp)
-target_link_libraries(doubleAlpha ${ROOT_LIBRARIES})
+target_link_libraries(doubleAlpha ${ROOT_LIBRARIES} eventDict)
 
 # Library threads
 find_package (Threads)

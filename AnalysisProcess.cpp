@@ -68,42 +68,46 @@ int AnalysisProcess::ReadParameters(std::string parameterFile) {
 
 int AnalysisProcess::BeginAnalysis(std::list<std::string> alphaFiles) {
     alphaFileList = std::move(alphaFiles);
-    if(!OpenInputFile()){
-        return -1;
-    }
-    while (positionInFile < fileSize) {
-        ReadBlockHeader();
-        positionInBlock = 0;
-        while (positionInBlock < dataLength) {
-            //Read event header
-            word0 = (blockData[positionInBlock + 1] & 0xFF) | ((blockData[positionInBlock + 0] & 0xFF) << 8);
-            word1 = (blockData[positionInBlock + 3] & 0xFF) | ((blockData[positionInBlock + 2] & 0xFF) << 8);
-
-            if ((word0 ^ 0xffff)) {
-                std::cout << "Event header not read properly" << std::endl;
-                return -1;
-            }
-            eventLength = word1;
-            if(eventLength == 0){
-                positionInBlock+=4;
-            }
-            //Read in event
-            for (int itrdata = positionInBlock + 4; itrdata < positionInBlock + eventLength; itrdata += 4) {
-                word0 = (blockData[itrdata + 1] & 0xFF) | ((blockData[itrdata + 0] & 0xFF) << 8);
-                word1 = (blockData[itrdata + 3] & 0xFF) | ((blockData[itrdata + 2] & 0xFF) << 8);
-                //std::cout << std::hex << word0 << " " << word1 << " " << std::dec << itrdata << std::endl;
-
-                dataWords.first = word0;
-                dataWords.second = word1;
-
-                dataWordsList.emplace_back(dataWords);
-            }
-            ProcessEvent();
-            positionInBlock += eventLength;
-            eventNumber++;
-
+    while(!alphaFileList.empty()) {
+        if (!OpenInputFile()) {
+            return -1;
         }
-        positionInFile += 0x10000;
+        positionInFile = 0;
+        while (positionInFile < fileSize) {
+            ReadBlockHeader();
+            positionInBlock = 0;
+            while (positionInBlock < dataLength) {
+                //Read event header
+                word0 = (blockData[positionInBlock + 1] & 0xFF) | ((blockData[positionInBlock + 0] & 0xFF) << 8);
+                word1 = (blockData[positionInBlock + 3] & 0xFF) | ((blockData[positionInBlock + 2] & 0xFF) << 8);
+
+                if ((word0 ^ 0xffff)) {
+                    std::cout << "Event header not read properly" << std::endl;
+                    return -1;
+                }
+                eventLength = word1;
+                if (eventLength == 0) {
+                    positionInBlock += 4;
+                }
+                //Read in event
+                for (int itrdata = positionInBlock + 4; itrdata < positionInBlock + eventLength; itrdata += 4) {
+                    word0 = (blockData[itrdata + 1] & 0xFF) | ((blockData[itrdata + 0] & 0xFF) << 8);
+                    word1 = (blockData[itrdata + 3] & 0xFF) | ((blockData[itrdata + 2] & 0xFF) << 8);
+                    //std::cout << std::hex << word0 << " " << word1 << " " << std::dec << itrdata << std::endl;
+
+                    dataWords.first = word0;
+                    dataWords.second = word1;
+
+                    dataWordsList.emplace_back(dataWords);
+                }
+                ProcessEvent();
+                positionInBlock += eventLength;
+                eventNumber++;
+
+            }
+            positionInFile += 0x10000;
+        }
+        inputFile.close();
     }
 
     return 1;
@@ -175,7 +179,7 @@ int AnalysisProcess::ProcessEvent() {
         if(unpackedItem.GetGroup() < 20 && unpackedItem.GetGroup() > 0){
             //Is adc event
             itemChannel = unpackedItem.GetItem() + ((unpackedItem.GetGroup() - 1) * 32);
-            itemValue = (double)unpackedItem.GetDataWord() * adcChannelGains[itemChannel] - adcChannelOffset[itemChannel];
+            itemValue = ((double)unpackedItem.GetDataWord()  - adcChannelOffset[itemChannel]) * adcChannelGains[itemChannel];
             outputEvent.AddToEvent(true, itemChannel, itemValue);
             rawADCEnergyVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
             calibratedADCEnergyVsChannel->Fill(itemChannel, itemValue);
@@ -195,8 +199,11 @@ int AnalysisProcess::ProcessEvent() {
         }
         else if(unpackedItem.GetGroup() == 30){
             //Is scaler event
-            itemChannel = unpackedItem.GetItem();
-            if( itemChannel < 16 ) {
+            itemChannel = (unpackedItem.GetItem())/2;
+            if(itemChannel > 16){
+                std::cout << itemChannel << " " << unpackedItem.GetItem() << std::endl;
+            }
+            if( itemChannel < 16 && unpackedItem.GetDataWord()>0) {
                 if (unpackedItem.GetDataWord() < previousScaler[itemChannel]) {
                     scalerBase[itemChannel] += 65536;
                 }
@@ -228,7 +235,8 @@ int AnalysisProcess::OpenOutputFile(std::string outputFile) {
         return -1;
     }
     outputTree = new TTree("doubleAlpha","doubleAlpha");
-    outputTree->Branch("double_alpha", &outputEvent, "eventNumber/l:adcChannels[128]/D:tdcChannels[128]/D:scalerChannels[16]/l:adcMultiplicity/I:tdcMultiplicity/I:pulserNumber/l");
+
+    outputTree->Branch("double_alpha", &outputEvent);//, "eventNumber/l:adcChannels[128]/D:tdcChannels[128]/D:scalerChannels[16]/l:adcMultiplicity/I:tdcMultiplicity/I:pulserNumber/l");
     return 1;
 }
 

@@ -4,6 +4,7 @@
 #include <utility>
 #include <iostream>
 #include "dataItems.h"
+ClassImp(OutputEvent);
 
 UnpackedItem::UnpackedItem() {
     item = 0;
