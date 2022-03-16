@@ -47,7 +47,9 @@ private:
     double adcChannelOffset[NUMBER_ADC_CHANNELS]{};
 
     unsigned long scalerBase[16];
-    int previousScaler[16];
+    unsigned long previousScaler[16];
+    unsigned int scalerWords[32] = {0};
+
 
     // Variables for outputting data
     TFile * outF{};

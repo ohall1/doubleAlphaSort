@@ -174,6 +174,10 @@ int AnalysisProcess::ReadBlockHeader() {
 int AnalysisProcess::ProcessEvent() {
     outputEvent.ClearEvent();
     isPulserEvent = false;
+    //bool channelRead[16] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+    for(int i = 0; i < 32; i++){
+        scalerWords[i] = 0;
+    }
     for(dataWordsListIt = dataWordsList.begin(); dataWordsListIt != dataWordsList.end(); dataWordsListIt++){
         unpackedItem.UpdateItem(*dataWordsListIt, eventNumber);
         if(unpackedItem.GetGroup() < 20 && unpackedItem.GetGroup() > 0){
@@ -199,21 +203,36 @@ int AnalysisProcess::ProcessEvent() {
         }
         else if(unpackedItem.GetGroup() == 30){
             //Is scaler event
-            itemChannel = (unpackedItem.GetItem())/2;
-            if(itemChannel > 16){
+            itemChannel = (unpackedItem.GetItem());
+            //if (channelRead[itemChannel]) continue;
+            //channelRead[itemChannel] = true;
+            unsigned int value = unpackedItem.GetDataWord();
+            if(itemChannel > 32){
                 std::cout << itemChannel << " " << unpackedItem.GetItem() << std::endl;
             }
-            if( itemChannel < 16 && unpackedItem.GetDataWord()>0) {
-                if (unpackedItem.GetDataWord() < previousScaler[itemChannel]) {
-                    scalerBase[itemChannel] += 65536;
+            if( itemChannel<32) {
+                if (value < previousScaler[itemChannel]) {
+                    //std::cout << itemChannel << " " << value << " " << previousScaler[itemChannel] << " " << scalerBase[itemChannel] << std::endl;
+                    //scalerBase[itemChannel] += 65536;
+                    //previousScaler[itemChannel] = 0;
                 }
-                previousScaler[itemChannel] = unpackedItem.GetDataWord();
-                outputEvent.AddScalerEvent(itemChannel, unpackedItem.GetDataWord()+scalerBase[itemChannel]);
+                //std::cout << itemChannel << " " << value << std::endl;
+                //std::cout << "Before " << previousScaler[itemChannel] << " " << value << " " << itemChannel << std::endl;
+                previousScaler[itemChannel] = value;
+                //std::cout << "After " << previousScaler[itemChannel] << " " << value << " " << itemChannel << std::endl;
+                //outputEvent.AddScalerEvent(itemChannel, value+scalerBase[itemChannel]);
+                scalerWords[itemChannel] = value;
             }
         }
         else continue;
 
 
+    }
+    for(int i = 0; i < 32; i+=2){
+        outputEvent.AddScalerEvent(i/2, (scalerWords[i+1] << 16 | scalerWords[i]));
+        //if(i == 10){
+          //  std::cout << (scalerWords[i+1] << 16 | scalerWords[i]) << std::endl;
+       //}
     }
     if(outputEvent.SetADCMultiplicity() > 40){
         //Event is pulser event
@@ -257,13 +276,20 @@ int AnalysisProcess::CloseAnalysisProcess() {
 
     std::cout << "Writing histograms" <<std::endl;
     rawADCEnergyVsChannel->Write();
+    std::cout << "raw ADC" <<std::endl;
     calibratedADCEnergyVsChannel->Write();
+    std::cout << "calibrated ADC" <<std::endl;
     rawTDCVsChannel->Write();
+    std::cout << "raw TDC" <<std::endl;
     calibratedTDCVsChannel->Write();
+    std::cout << "calibrated ADC" <<std::endl;
     pulserVsChannel->Write();
+    std::cout << "pulser ADC" <<std::endl;
     outF->Write();
+    std::cout << "File written" << std::endl;
 
     outF->Close();
+    std::cout << "File closed" << std::endl;
 
     return 0;
 }
