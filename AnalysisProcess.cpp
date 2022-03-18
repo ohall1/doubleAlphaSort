@@ -207,6 +207,8 @@ int AnalysisProcess::ProcessEvent() {
             //if (channelRead[itemChannel]) continue;
             //channelRead[itemChannel] = true;
             unsigned int value = unpackedItem.GetDataWord();
+           // if(itemChannel == 2 || itemChannel == 3) std::cout << "Event: " <<  itemChannel << " " << value <<std::endl;
+
             if(itemChannel > 32){
                 std::cout << itemChannel << " " << unpackedItem.GetItem() << std::endl;
             }
@@ -218,10 +220,11 @@ int AnalysisProcess::ProcessEvent() {
                 }
                 //std::cout << itemChannel << " " << value << std::endl;
                 //std::cout << "Before " << previousScaler[itemChannel] << " " << value << " " << itemChannel << std::endl;
-                previousScaler[itemChannel] = value;
+                //previousScaler[itemChannel] = value;
                 //std::cout << "After " << previousScaler[itemChannel] << " " << value << " " << itemChannel << std::endl;
                 //outputEvent.AddScalerEvent(itemChannel, value+scalerBase[itemChannel]);
                 scalerWords[itemChannel] = value;
+                //if(itemChannel == 1 || itemChannel == 0) std::cout << "Array: " <<  itemChannel << " " << scalerWords[itemChannel] <<std::endl;
             }
         }
         else continue;
@@ -230,6 +233,7 @@ int AnalysisProcess::ProcessEvent() {
     }
     for(int i = 0; i < 32; i+=2){
         outputEvent.AddScalerEvent(i/2, (scalerWords[i+1] << 16 | scalerWords[i]));
+        //std::cout << i << " " << i/2 << " " << (scalerWords[i+1] << 16 | scalerWords[i]) << " " <<  scalerWords[i+1] << " " << scalerWords[i] << std::endl;
         //if(i == 10){
           //  std::cout << (scalerWords[i+1] << 16 | scalerWords[i]) << std::endl;
        //}

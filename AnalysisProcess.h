@@ -48,7 +48,7 @@ private:
 
     unsigned long scalerBase[16];
     unsigned long previousScaler[16];
-    unsigned int scalerWords[32] = {0};
+    unsigned long scalerWords[32] = {0};
 
 
     // Variables for outputting data
