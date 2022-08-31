@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <vector>
 #include <TFile.h>
 #include <TTree.h>
 #include "TH2D.h"
@@ -33,9 +34,13 @@ private:
     uint16_t word0, word1;
     uint16_t eventLength{};
 
+    int blindingProcess;
+
     std::ifstream inputFile;
     std::list <std::string> alphaFileList; //List of the files to be sorted
     std::string currentInputFile;
+
+    std::vector<std::vector<double>> blindRegionLow, blindRegionHigh;
     unsigned long eventNumber;
     // variables for unpacking and calibrating data
     UnpackedItem unpackedItem;
@@ -74,6 +79,7 @@ public:
     int OpenOutputFile(std::string outputFile);
     int DefineHistograms();
     int CloseAnalysisProcess();
+    int DefineBlindProcess(int option);
 
 };
 

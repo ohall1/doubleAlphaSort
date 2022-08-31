@@ -30,6 +30,11 @@ AnalysisProcess::AnalysisProcess(){
     pulserNumber = 0;
     positionInFile = 0;
     fileSize = 0;
+    std::vector<double> temp;
+    for(auto i = 0; i < 2; i++){
+        blindRegionLow.push_back(temp);
+        blindRegionHigh.push_back(temp);
+    }
 }
 
 int AnalysisProcess::ReadParameters(std::string parameterFile) {
@@ -37,6 +42,7 @@ int AnalysisProcess::ReadParameters(std::string parameterFile) {
     std::ifstream parameters(parameterFile.data());
     int channel;
     double value;
+    double value_high;
     if (parameters.bad()){
         return -1;
     }
@@ -48,7 +54,7 @@ int AnalysisProcess::ReadParameters(std::string parameterFile) {
         if(newLine.size() > 0){
             std::istringstream iss(line,std::istringstream::in);
             iss >> dummyVar;
-            std::cout << dummyVar << std::endl;
+            //std::cout << dummyVar << std::endl;
             if(dummyVar == "adcOffset"){
                 iss >> channel;
                 iss >> value;
@@ -59,6 +65,17 @@ int AnalysisProcess::ReadParameters(std::string parameterFile) {
                 iss >> value;
                 adcChannelGains[channel] = value;
             }
+            else if(dummyVar == "blindRegion"){
+                iss >> channel;
+                iss >> value;
+                iss >> value_high;
+                
+                std::cout << "Blinding region: Det " << channel << ", Lower bound " << value
+                          << ", Upper bound " << value_high << std::endl;
+                blindRegionLow.at(channel).push_back(value);
+                blindRegionHigh.at(channel).push_back(value_high);
+            }
+
             else continue;
         }
     }
@@ -173,20 +190,50 @@ int AnalysisProcess::ReadBlockHeader() {
 
 int AnalysisProcess::ProcessEvent() {
     outputEvent.ClearEvent();
+    int det = 2;
     isPulserEvent = false;
+    bool isBlinded = false;
     //bool channelRead[16] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
     for(int i = 0; i < 32; i++){
         scalerWords[i] = 0;
     }
     for(dataWordsListIt = dataWordsList.begin(); dataWordsListIt != dataWordsList.end(); dataWordsListIt++){
         unpackedItem.UpdateItem(*dataWordsListIt, eventNumber);
+        isBlinded = false;
         if(unpackedItem.GetGroup() < 20 && unpackedItem.GetGroup() > 0){
             //Is adc event
             itemChannel = unpackedItem.GetItem() + ((unpackedItem.GetGroup() - 1) * 32);
             itemValue = ((double)unpackedItem.GetDataWord()  - adcChannelOffset[itemChannel]) * adcChannelGains[itemChannel];
-            outputEvent.AddToEvent(true, itemChannel, itemValue);
-            rawADCEnergyVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
-            calibratedADCEnergyVsChannel->Fill(itemChannel, itemValue);
+            if(itemChannel < 32){
+                det = 0;
+            }
+            else if(itemChannel < 64)
+            {
+                det = 1;
+            }
+            else{
+                det = 2;
+            }
+            if(blindingProcess == 0 && det == 1){
+                isBlinded = true;
+            }
+            else if(blindingProcess == 1 && det == 0){
+                isBlinded = true;
+            }
+            else if(blindingProcess == 2){
+                if(det < 2){
+                    for(int i = 0; i < blindRegionLow.at(det).size(); i++){
+                        if(itemValue >= blindRegionLow.at(det).at(i) && itemValue <= blindRegionHigh.at(det).at(i)){
+                            isBlinded = true;
+                        }
+                    }
+                }
+            }
+            if(!isBlinded){
+                outputEvent.AddToEvent(true, itemChannel, itemValue);
+                rawADCEnergyVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
+                calibratedADCEnergyVsChannel->Fill(itemChannel, itemValue);
+            }
             if(isPulserEvent){
                 pulserVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
             }
@@ -196,6 +243,9 @@ int AnalysisProcess::ProcessEvent() {
             itemChannel = unpackedItem.GetItem() + (unpackedItem.GetGroup() - 20) * 64;
             //Common stop mode means first 16 channels of V767 module are not used
             itemChannel = itemChannel - 16 *(1+((unpackedItem.GetGroup()-20)/2));
+            if(itemChannel == -16){
+                itemChannel = 127;
+            }
             itemValue = (double)unpackedItem.GetDataWord();
             outputEvent.AddToEvent(false, itemChannel, itemValue);
             rawTDCVsChannel->Fill(itemChannel, (double)unpackedItem.GetDataWord());
@@ -296,4 +346,9 @@ int AnalysisProcess::CloseAnalysisProcess() {
     std::cout << "File closed" << std::endl;
 
     return 0;
+}
+
+int AnalysisProcess::DefineBlindProcess(int option){
+    blindingProcess = option;
+    return blindingProcess;
 }
